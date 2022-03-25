@@ -1,68 +1,75 @@
 class Stack {
-  constructor (lenght = 10){
-    try {
-      if (isNaN(lenght)) {
-        throw 'Не удалось преобразовать параметр в число.'
-      }
-      const lenInt = parseInt(lenght)
-      const lenFloat = parseFloat(lenght)
-      if (lenInt !== lenFloat) {
-        throw 'Конструктор принимает только целые числа в десятичном формате.'
-      }
-      this.array = new Array(lenInt);
-      this.pointer = -1;
+  constructor(maxLength = 10) {
+    if (!Number.isInteger(maxLength) || maxLength < 1) {
+      throw new Error('invalid length');
     }
-    catch (ex) {
-      console.error(ex.toString())     
-    }
-  }
 
-  size() {
-    if (!this.array) {
-      return console.log('Стэк не был инициализирован.')
-    }
-    return this.array.length;
-    
+    this.length = 0;
+    this.maxLength = maxLength;
+    this.top = null;
   }
 
   push(elem) {
-    if (this.array.length - 1 == this.pointer) throw 'Превышена вместимость стэка.'
-    this.array[++this.pointer] = elem;
+    const prev = this.top;
+    const node = new Node(elem);    
+    node.prev = prev;
+    this.top = node;
+    
+    if (this.length > this.maxLength) {
+      throw new Error('stack is oversized');
+    }
+    
+    this.length++;
   }
 
   pop() {
-    if (this.isEmpty()) throw 'Стэк пуст'
-    return this.array[this.pointer--]
+    const current = this.top;
+    
+    if (!current) {
+      throw new Error('stack is empty');
+    }
+
+    this.top = current.prev;
+    this.length--;
+    
+    return current.elem;
   }
 
   peek() {
-    if (this.isEmpty()) return null;
-    return this.array[this.pointer]
+    return this.top ? this.top.elem : null;
   }
 
   isEmpty() {
-    return this.pointer === -1
+    return this.length === 0;
   }
 
   toArray() {
-    if (this.isEmpty()) return []
+    let current = this.top;
+    const res = [];
+    let i = 0;
     
-    return this.array.slice(0, this.pointer + 1)
+    while (current) {
+      res[i] = current.elem;
+      current = current.prev;
+      i++;
+    }
+    
+    return res;
   }
 
   static fromIterable(iterable) {
+    if (!iterable || typeof iterable[Symbol.iterator] !== 'function') {
+      throw new Error('param is not iterable');
+    }
 
-    const ok = typeof iterable === 'object' && typeof iterable[Symbol.iterator] === 'function'
-    if (!ok) throw 'Невозможно преобразовать в стэк'
-    const array = Array.from(iterable)
-    const stack = new Stack(array.length)
-    for (const el of array) stack.push(el)
-    return stack
+    const stack = new Stack(iterable.length);
+    
+    for (const value of iterable) {
+      stack.push(value);  
+    }
+
+    return stack;
   }
 }
-
-// let stack = new Stack;
-
-// console.log(stack)
 
 module.exports = { Stack };
